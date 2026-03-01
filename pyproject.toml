@@ -1,0 +1,14 @@
+[project]
+name = "ttrpg-notes"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = ["PySide6", "spylls", "requests"]
+
+[project.scripts]
+ttrpg-notes = "ttrpg_notes.__main__:main"
+
+[tool.ruff]
+line-length = 100
+
+[tool.mypy]
+strict = true
