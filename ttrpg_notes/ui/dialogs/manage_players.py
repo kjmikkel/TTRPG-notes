@@ -97,7 +97,6 @@ class ManagePlayersDialog(QDialog):
         return item.data(0, _ROLE) if item else None
 
     def _select_by_tag(self, tag) -> None:
-        it = QTreeWidgetItem()  # dummy — just to iterate
         for i in range(self._tree.topLevelItemCount()):
             top = self._tree.topLevelItem(i)
             if top.data(0, _ROLE) == tag:

@@ -3,8 +3,6 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 
-_log = logging.getLogger(__name__)
-
 from PySide6.QtCore import Qt, QThread, Signal
 from PySide6.QtWidgets import (
     QDialog,
@@ -18,6 +16,8 @@ from PySide6.QtWidgets import (
     QPushButton,
     QVBoxLayout,
 )
+
+_log = logging.getLogger(__name__)
 
 _B = "https://raw.githubusercontent.com/LibreOffice/dictionaries/master"
 

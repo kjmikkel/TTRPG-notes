@@ -3,8 +3,6 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 
-_log = logging.getLogger(__name__)
-
 from PySide6.QtWidgets import (
     QCheckBox,
     QDialog,
@@ -17,6 +15,8 @@ from PySide6.QtWidgets import (
 )
 
 from ttrpg_notes.models.campaign import Campaign
+
+_log = logging.getLogger(__name__)
 
 
 class ExportDialog(QDialog):

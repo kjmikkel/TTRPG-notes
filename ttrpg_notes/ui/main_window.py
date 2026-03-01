@@ -4,8 +4,6 @@ import logging
 import uuid
 from pathlib import Path
 
-_log = logging.getLogger(__name__)
-
 from PySide6.QtCore import Qt, QThread, Signal
 from PySide6.QtGui import QAction, QKeySequence, QTextCursor
 from PySide6.QtWidgets import (
@@ -27,6 +25,8 @@ from ttrpg_notes.models.persistence import load_campaign, save_campaign, save_di
 from ttrpg_notes.ui.kill_panel import KillPanel
 from ttrpg_notes.ui.session_list import SessionList
 from ttrpg_notes.ui.summary_editor import SummaryEditor
+
+_log = logging.getLogger(__name__)
 
 
 class _SuggestWorker(QThread):

@@ -8,8 +8,6 @@ from __future__ import annotations
 import logging
 import webbrowser
 
-_log = logging.getLogger(__name__)
-
 from PySide6.QtCore import QThread, Signal
 from PySide6.QtWidgets import (
     QCheckBox,
@@ -25,6 +23,8 @@ from PySide6.QtWidgets import (
 )
 
 from ttrpg_notes.config import settings
+
+_log = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
