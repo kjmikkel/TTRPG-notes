@@ -2,8 +2,7 @@ from __future__ import annotations
 
 import re
 
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QColor, QSyntaxHighlighter, QTextCharFormat
+from PySide6.QtGui import QColor, QSyntaxHighlighter, QTextCharFormat, QTextDocument
 
 from ttrpg_notes.ui.spellcheck.checker import SpellChecker
 
@@ -13,14 +12,14 @@ _WORD_RE = re.compile(r"\b[a-zA-Z''\u2019]+\b")
 def _make_error_format() -> QTextCharFormat:
     fmt = QTextCharFormat()
     fmt.setUnderlineColor(QColor("red"))
-    fmt.setUnderlineStyle(QTextCharFormat.SpellCheckUnderline)
+    fmt.setUnderlineStyle(QTextCharFormat.UnderlineStyle.SpellCheckUnderline)
     return fmt
 
 
 class SpellHighlighter(QSyntaxHighlighter):
     """Highlights misspelled words with a red wavy underline."""
 
-    def __init__(self, document, checker: SpellChecker) -> None:
+    def __init__(self, document: QTextDocument, checker: SpellChecker) -> None:
         super().__init__(document)
         self._checker = checker
         self._error_fmt = _make_error_format()

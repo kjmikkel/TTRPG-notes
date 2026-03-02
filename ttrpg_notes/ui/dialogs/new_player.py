@@ -6,11 +6,12 @@ from PySide6.QtWidgets import (
     QFormLayout,
     QLineEdit,
     QVBoxLayout,
+    QWidget,
 )
 
 
 class NewPlayerDialog(QDialog):
-    def __init__(self, parent=None) -> None:
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.setWindowTitle("New Player")
         self.setMinimumWidth(300)
@@ -27,7 +28,7 @@ class NewPlayerDialog(QDialog):
         self._char_edit.setPlaceholderText("Ragna")
         form.addRow("Initial character:", self._char_edit)
 
-        buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
         buttons.accepted.connect(self._accept)
         buttons.rejected.connect(self.reject)
         outer.addWidget(buttons)

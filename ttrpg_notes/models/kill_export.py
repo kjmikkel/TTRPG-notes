@@ -59,6 +59,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Any
 
 from ttrpg_notes.models.campaign import Campaign, Session
 
@@ -108,11 +109,11 @@ def build_kill_report(campaign: Campaign) -> dict[str, object]:
     Returns a plain ``dict`` (no PySide6 or other UI types) that can be
     serialised directly with :func:`json.dumps`.
     """
-    sessions_out: list[dict] = []
+    sessions_out: list[dict[str, Any]] = []
 
     for idx, session in enumerate(campaign.sessions):
         # --- by character ---
-        by_character: list[dict] = []
+        by_character: list[dict[str, Any]] = []
         for player in campaign.players:
             for char in player.characters:
                 sess_by_type = _char_session_kills(session, char.id)
@@ -127,7 +128,7 @@ def build_kill_report(campaign: Campaign) -> dict[str, object]:
                 })
 
         # --- by player (sum across all characters) ---
-        by_player: list[dict] = []
+        by_player: list[dict[str, Any]] = []
         for player in campaign.players:
             sess_by_type = _merge(
                 *(_char_session_kills(session, c.id) for c in player.characters)

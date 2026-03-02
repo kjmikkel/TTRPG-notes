@@ -3,9 +3,10 @@ from __future__ import annotations
 import logging
 import uuid
 from pathlib import Path
+from typing import TYPE_CHECKING, Any
 
-from PySide6.QtCore import Qt, QThread, Signal
-from PySide6.QtGui import QAction, QKeySequence, QTextCursor
+from PySide6.QtCore import Qt, QPoint, QThread, Signal
+from PySide6.QtGui import QAction, QCloseEvent, QKeySequence, QTextCursor
 from PySide6.QtWidgets import (
     QDialog,
     QFileDialog,
@@ -18,6 +19,9 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+
+if TYPE_CHECKING:
+    from ttrpg_notes.ui.spellcheck.checker import SpellChecker
 
 from ttrpg_notes.config import settings
 from ttrpg_notes.models.campaign import Campaign, Session
@@ -34,7 +38,7 @@ class _SuggestWorker(QThread):
 
     suggestions_ready = Signal(list)
 
-    def __init__(self, word: str, checker) -> None:
+    def __init__(self, word: str, checker: SpellChecker) -> None:
         super().__init__()
         self._word = word
         self._checker = checker
@@ -90,10 +94,10 @@ class MainWindow(QMainWindow):
         self._campaign: Campaign | None = None
         self._campaign_path: str | None = None
         self._current_session: Session | None = None
-        self._spell_checker = None
-        self._highlighter = None
-        self._suggest_workers: list = []  # keeps running workers alive until finished
-        self._upload_workers: list = []   # keeps upload workers alive until finished
+        self._spell_checker: SpellChecker | None = None
+        self._highlighter: object | None = None
+        self._suggest_workers: list[_SuggestWorker] = []  # keeps running workers alive until finished
+        self._upload_workers: list[_UploadWorker] = []   # keeps upload workers alive until finished
 
         self._build_ui()
         self._build_menu()
@@ -104,7 +108,7 @@ class MainWindow(QMainWindow):
     # ------------------------------------------------------------------
 
     def _build_ui(self) -> None:
-        self._splitter = QSplitter(Qt.Horizontal)
+        self._splitter = QSplitter(Qt.Orientation.Horizontal)
         self.setCentralWidget(self._splitter)
         splitter = self._splitter
 
@@ -155,12 +159,12 @@ class MainWindow(QMainWindow):
         file_menu = menu.addMenu("&File")
 
         new_action = QAction("&New Campaign…", self)
-        new_action.setShortcut(QKeySequence.New)
+        new_action.setShortcut(QKeySequence.StandardKey.New)
         new_action.triggered.connect(self._action_new_campaign)
         file_menu.addAction(new_action)
 
         open_action = QAction("&Open…", self)
-        open_action.setShortcut(QKeySequence.Open)
+        open_action.setShortcut(QKeySequence.StandardKey.Open)
         open_action.triggered.connect(self._action_open)
         file_menu.addAction(open_action)
 
@@ -172,7 +176,7 @@ class MainWindow(QMainWindow):
         file_menu.addSeparator()
 
         self._save_action = QAction("&Save", self)
-        self._save_action.setShortcut(QKeySequence.Save)
+        self._save_action.setShortcut(QKeySequence.StandardKey.Save)
         self._save_action.triggered.connect(self._action_save)
         self._save_action.setEnabled(False)
         file_menu.addAction(self._save_action)
@@ -266,16 +270,23 @@ class MainWindow(QMainWindow):
         else:
             self._load_spellcheck(dic_files[0], SpellChecker, SpellHighlighter)
 
-    def _load_spellcheck(self, dic_path: Path, checker_cls, highlighter_cls) -> None:
+    def _load_spellcheck(
+        self,
+        dic_path: Path,
+        checker_cls: type[SpellChecker],
+        highlighter_cls: type[Any],
+    ) -> None:
         try:
             self._spell_checker = checker_cls(dic_path)
 
-            class _BoundHighlighter(highlighter_cls):
-                def __init__(self_, document):
-                    super().__init__(document, self._spell_checker)
+            spell_checker = self._spell_checker
+
+            class _BoundHighlighter(highlighter_cls):  # type: ignore[misc]
+                def __init__(self_, document: Any) -> None:
+                    super().__init__(document, spell_checker)
 
             self._highlighter = self._summary_editor.attach_highlighter(_BoundHighlighter)
-            self._summary_editor.setContextMenuPolicy(Qt.CustomContextMenu)
+            self._summary_editor.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
             self._summary_editor.customContextMenuRequested.connect(
                 self._on_summary_context_menu
             )
@@ -283,7 +294,7 @@ class MainWindow(QMainWindow):
             _log.exception("Failed to load spellcheck dictionary")
             self.statusBar().showMessage(f"Spellcheck unavailable: {exc}", 5000)
 
-    def _on_summary_context_menu(self, pos) -> None:
+    def _on_summary_context_menu(self, pos: QPoint) -> None:
         if self._spell_checker is None:
             return
         cursor = self._summary_editor.cursorForPosition(pos)
@@ -315,7 +326,7 @@ class MainWindow(QMainWindow):
         menu.addSeparator()
         menu.addActions(self._summary_editor.createStandardContextMenu().actions())
 
-        def _apply(suggestions: list) -> None:
+        def _apply(suggestions: list[str]) -> None:
             menu.removeAction(placeholder)
             if suggestions:
                 for s in reversed(suggestions):
@@ -375,7 +386,7 @@ class MainWindow(QMainWindow):
             self._summary_editor.load_session(None)
             self._kill_panel.load_session(self._campaign, None)
         # Deletion must be committed with a full save (partial save can't remove sessions).
-        if self._campaign_path:
+        if self._campaign is not None and self._campaign_path:
             try:
                 save_campaign(self._campaign, self._campaign_path)
                 self.statusBar().showMessage("Session deleted and saved.", 2000)
@@ -407,7 +418,7 @@ class MainWindow(QMainWindow):
         from ttrpg_notes.ui.dialogs.new_campaign import NewCampaignDialog
 
         dlg = NewCampaignDialog(self)
-        if dlg.exec() != QDialog.Accepted:
+        if dlg.exec() != QDialog.DialogCode.Accepted:
             return
 
         path, _ = QFileDialog.getSaveFileName(
@@ -585,7 +596,7 @@ class MainWindow(QMainWindow):
         from ttrpg_notes.ui.dialogs.new_session import NewSessionDialog
 
         dlg = NewSessionDialog(self)
-        if dlg.exec() != QDialog.Accepted:
+        if dlg.exec() != QDialog.DialogCode.Accepted:
             return
         session = Session(
             id=str(uuid.uuid4()),
@@ -672,11 +683,11 @@ class MainWindow(QMainWindow):
             self,
             "Unsaved Changes",
             f"{len(dirty)} session(s) have unsaved changes. Discard?",
-            QMessageBox.Discard | QMessageBox.Cancel,
+            QMessageBox.StandardButton.Discard | QMessageBox.StandardButton.Cancel,
         )
-        return resp == QMessageBox.Discard
+        return resp == QMessageBox.StandardButton.Discard
 
-    def closeEvent(self, event) -> None:
+    def closeEvent(self, event: QCloseEvent) -> None:
         settings.set_splitter_sizes(self._splitter.sizes())
         if self._campaign is None:
             event.accept()
@@ -689,12 +700,12 @@ class MainWindow(QMainWindow):
             self,
             "Unsaved Changes",
             f"{len(dirty)} session(s) have unsaved changes.",
-            QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel,
+            QMessageBox.StandardButton.Save | QMessageBox.StandardButton.Discard | QMessageBox.StandardButton.Cancel,
         )
-        if resp == QMessageBox.Save:
+        if resp == QMessageBox.StandardButton.Save:
             self._action_save()
             event.accept()
-        elif resp == QMessageBox.Discard:
+        elif resp == QMessageBox.StandardButton.Discard:
             event.accept()
         else:
             event.ignore()

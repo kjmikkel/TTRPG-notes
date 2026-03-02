@@ -1,7 +1,11 @@
 from __future__ import annotations
 
-from PySide6.QtCore import Qt, QTimer, Signal
+from typing import TYPE_CHECKING, Any
+
+from PySide6.QtCore import Qt, QPoint, QTimer, Signal
+from PySide6.QtGui import QTextCursor
 from PySide6.QtWidgets import (
+    QMenu,
     QPushButton,
     QSizePolicy,
     QTextEdit,
@@ -12,13 +16,16 @@ from PySide6.QtWidgets import (
 from ttrpg_notes.config import settings
 from ttrpg_notes.models.campaign import Session
 
+if TYPE_CHECKING:
+    from ttrpg_notes.ui.spellcheck.highlighter import SpellHighlighter
+
 
 class _CollapsibleSection(QWidget):
     """A titled, collapsible QTextEdit panel."""
 
     toggled = Signal(bool)  # True = expanded
 
-    def __init__(self, title: str, expanded: bool, parent=None) -> None:
+    def __init__(self, title: str, expanded: bool, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._title = title
 
@@ -35,7 +42,7 @@ class _CollapsibleSection(QWidget):
         layout.addWidget(self._toggle)
 
         self._editor = QTextEdit()
-        self._editor.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self._editor.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self._editor.setMinimumHeight(80)
         layout.addWidget(self._editor)
 
@@ -78,8 +85,8 @@ class _CollapsibleSection(QWidget):
         arrow = "▼" if expanded else "▶"
         self._toggle.setText(f"{arrow}  {self._title}")
         # Let the section shrink to toggle-only height when collapsed.
-        v_policy = QSizePolicy.Expanding if expanded else QSizePolicy.Fixed
-        self.setSizePolicy(QSizePolicy.Expanding, v_policy)
+        v_policy = QSizePolicy.Policy.Expanding if expanded else QSizePolicy.Policy.Fixed
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, v_policy)
 
 
 # ---------------------------------------------------------------------------
@@ -97,12 +104,12 @@ class SummaryEditor(QWidget):
 
     text_changed_by_user = Signal()
 
-    def __init__(self, parent=None) -> None:
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
 
         self._session: Session | None = None
         self._updating = False
-        self._highlighters: list = []
+        self._highlighters: list[SpellHighlighter] = []
         self._ctx_editor: QTextEdit | None = None
         self._custom_context_active = False
 
@@ -138,7 +145,7 @@ class SummaryEditor(QWidget):
 
         # Forward right-click events from each child editor.
         for section in (self._pre, self._summary, self._post):
-            section.editor.setContextMenuPolicy(Qt.CustomContextMenu)
+            section.editor.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
             section.editor.customContextMenuRequested.connect(
                 lambda pos, e=section.editor: self._forward_context_menu(e, pos)
             )
@@ -154,11 +161,11 @@ class SummaryEditor(QWidget):
     # (main_window calls these on self._summary_editor directly)
     # ------------------------------------------------------------------
 
-    def setContextMenuPolicy(self, policy) -> None:
+    def setContextMenuPolicy(self, policy: Qt.ContextMenuPolicy) -> None:
         # Track whether the spell-check handler has been connected.
-        self._custom_context_active = (policy == Qt.CustomContextMenu)
+        self._custom_context_active = (policy == Qt.ContextMenuPolicy.CustomContextMenu)
 
-    def _forward_context_menu(self, editor: QTextEdit, pos) -> None:
+    def _forward_context_menu(self, editor: QTextEdit, pos: QPoint) -> None:
         self._ctx_editor = editor
         if self._custom_context_active:
             self.customContextMenuRequested.emit(pos)
@@ -167,24 +174,24 @@ class SummaryEditor(QWidget):
                 editor.viewport().mapToGlobal(pos)
             )
 
-    def cursorForPosition(self, pos):
+    def cursorForPosition(self, pos: QPoint) -> QTextCursor:
         return (self._ctx_editor or self._summary.editor).cursorForPosition(pos)
 
-    def viewport(self):
+    def viewport(self) -> QWidget:
         return (self._ctx_editor or self._summary.editor).viewport()
 
-    def createStandardContextMenu(self):
+    def createStandardContextMenu(self) -> QMenu:
         return (self._ctx_editor or self._summary.editor).createStandardContextMenu()
 
     # ------------------------------------------------------------------
     # Spell-check integration
     # ------------------------------------------------------------------
 
-    def attach_highlighter(self, highlighter_cls) -> object:
+    def attach_highlighter(self, highlighter_cls: type[Any]) -> object:
         """Attach a SpellHighlighter to all three editors; returns the first."""
         self._highlighters.clear()
         for section in (self._pre, self._summary, self._post):
-            h = highlighter_cls(section.editor.document())
+            h: SpellHighlighter = highlighter_cls(section.editor.document())
             self._highlighters.append(h)
         return self._highlighters[0] if self._highlighters else None
 

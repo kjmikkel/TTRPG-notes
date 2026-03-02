@@ -37,6 +37,7 @@ import os
 import secrets
 import threading
 import urllib.parse
+from collections.abc import Callable
 from dataclasses import dataclass
 
 import requests
@@ -96,8 +97,12 @@ def _build_auth_url(app_key: str, code_challenge: str, redirect_uri: str) -> str
 class _CallbackServer(http.server.HTTPServer):
     """HTTPServer that stores the auth code delivered via the redirect."""
 
-    def __init__(self, *args: object, **kwargs: object) -> None:
-        super().__init__(*args, **kwargs)  # type: ignore[call-overload]
+    def __init__(
+        self,
+        server_address: tuple[str, int],
+        RequestHandlerClass: type[http.server.BaseHTTPRequestHandler],
+    ) -> None:
+        super().__init__(server_address, RequestHandlerClass)
         self.auth_code: str | None = None
         self.auth_error: str | None = None
         self.callback_event = threading.Event()
@@ -166,7 +171,7 @@ def _exchange_code(
 
 def run_auth_flow(
     app_key: str,
-    open_browser_fn: object,
+    open_browser_fn: Callable[[str], object],
     timeout_secs: float = 120.0,
 ) -> TokenResult:
     """
@@ -191,7 +196,6 @@ def run_auth_flow(
     TokenResult
         Contains ``access_token`` and ``refresh_token``.
     """
-    import inspect
     if not callable(open_browser_fn):
         raise TypeError("open_browser_fn must be callable")
 
@@ -203,7 +207,7 @@ def run_auth_flow(
     redirect_uri = f"http://localhost:{port}"
 
     auth_url = _build_auth_url(app_key, challenge, redirect_uri)
-    open_browser_fn(auth_url)  # type: ignore[call-arg]
+    open_browser_fn(auth_url)
 
     # handle_request() blocks until one HTTP request arrives; run it in a
     # daemon thread so the timeout below can interrupt the wait gracefully.

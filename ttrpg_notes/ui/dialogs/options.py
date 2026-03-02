@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Callable
+from typing import TYPE_CHECKING, Callable
 
 from PySide6.QtCore import QLocale
+
+if TYPE_CHECKING:
+    from ttrpg_notes.ui.spellcheck.checker import SpellChecker
 from PySide6.QtWidgets import (
     QComboBox,
     QDialog,
@@ -34,7 +37,7 @@ _DATE_PRESETS: list[tuple[str, str]] = [
 class _Fold(QWidget):
     """Collapsible section with a toggle button header."""
 
-    def __init__(self, title: str, parent=None) -> None:
+    def __init__(self, title: str, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._title = title
 
@@ -77,9 +80,9 @@ class OptionsDialog(QDialog):
     def __init__(
         self,
         campaign: Campaign | None,
-        checker,
+        checker: SpellChecker | None,
         rehighlight_fn: Callable[[], None],
-        parent=None,
+        parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
         self._campaign = campaign
@@ -97,7 +100,7 @@ class OptionsDialog(QDialog):
 
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
-        scroll.setFrameShape(QScrollArea.NoFrame)
+        scroll.setFrameShape(QScrollArea.Shape.NoFrame)
         content = QWidget()
         self._vbox = QVBoxLayout(content)
         self._vbox.setSpacing(12)
@@ -129,7 +132,7 @@ class OptionsDialog(QDialog):
 
         self._vbox.addStretch()
 
-        buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
         buttons.accepted.connect(self._on_ok)
         buttons.rejected.connect(self.reject)
         outer.addWidget(buttons)
@@ -232,7 +235,12 @@ class OptionsDialog(QDialog):
     # ------------------------------------------------------------------
 
     def _build_word_fold(
-        self, title: str, get_fn, add_fn, remove_fn, update_fn
+        self,
+        title: str,
+        get_fn: Callable[[], list[str]],
+        add_fn: Callable[[str], None],
+        remove_fn: Callable[[str], None],
+        update_fn: Callable[[str, str], None],
     ) -> None:
         fold = _Fold(title)
         fold.body_layout().addWidget(
@@ -240,7 +248,13 @@ class OptionsDialog(QDialog):
         )
         self._vbox.addWidget(fold)
 
-    def _make_word_editor(self, get_fn, add_fn, remove_fn, update_fn) -> QWidget:
+    def _make_word_editor(
+        self,
+        get_fn: Callable[[], list[str]],
+        add_fn: Callable[[str], None],
+        remove_fn: Callable[[str], None],
+        update_fn: Callable[[str, str], None],
+    ) -> QWidget:
         widget = QWidget()
         hbox = QHBoxLayout(widget)
         hbox.setContentsMargins(0, 0, 0, 0)

@@ -20,6 +20,7 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QPushButton,
     QVBoxLayout,
+    QWidget,
 )
 
 from ttrpg_notes.config import settings
@@ -67,7 +68,7 @@ class DropboxSetupDialog(QDialog):
     Settings are written to QSettings immediately — there is no Cancel.
     """
 
-    def __init__(self, parent=None) -> None:
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.setWindowTitle("Dropbox Integration")
         self.setMinimumWidth(460)
@@ -126,7 +127,7 @@ class DropboxSetupDialog(QDialog):
         outer.addWidget(self._connect_btn)
 
         # --- Close ---
-        buttons = QDialogButtonBox(QDialogButtonBox.Close)
+        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
         buttons.rejected.connect(self._on_close)
         outer.addWidget(buttons)
 

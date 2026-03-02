@@ -22,9 +22,9 @@ def run_startup(window: MainWindow) -> None:
     msg = QMessageBox(window)
     msg.setWindowTitle("Welcome to TTRPG Notes")
     msg.setText("No campaign is loaded. What would you like to do?")
-    new_btn = msg.addButton("New Campaign…", QMessageBox.AcceptRole)
-    open_btn = msg.addButton("Open Campaign…", QMessageBox.AcceptRole)
-    msg.addButton("Start Empty", QMessageBox.RejectRole)
+    new_btn = msg.addButton("New Campaign…", QMessageBox.ButtonRole.AcceptRole)
+    open_btn = msg.addButton("Open Campaign…", QMessageBox.ButtonRole.AcceptRole)
+    msg.addButton("Start Empty", QMessageBox.ButtonRole.RejectRole)
     msg.exec()
 
     clicked = msg.clickedButton()

@@ -8,9 +8,10 @@ from PySide6.QtWidgets import (
     QListWidget,
     QListWidgetItem,
     QVBoxLayout,
+    QWidget,
 )
 
-from ttrpg_notes.models.campaign import Campaign, Session
+from ttrpg_notes.models.campaign import Campaign
 
 
 class SearchDialog(QDialog):
@@ -18,11 +19,11 @@ class SearchDialog(QDialog):
 
     session_selected = Signal(object)  # Session
 
-    def __init__(self, campaign: Campaign, parent=None) -> None:
+    def __init__(self, campaign: Campaign, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._campaign = campaign
         self.setWindowTitle("Search Sessions")
-        self.setWindowFlag(Qt.WindowStaysOnTopHint, False)
+        self.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint, False)
         self.setMinimumWidth(400)
         self.setMinimumHeight(300)
 

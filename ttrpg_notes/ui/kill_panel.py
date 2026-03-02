@@ -8,7 +8,6 @@ from PySide6.QtWidgets import (
     QLabel,
     QLineEdit,
     QScrollArea,
-    QSizePolicy,
     QVBoxLayout,
     QWidget,
 )
@@ -44,7 +43,7 @@ class CharacterKillSection(QWidget):
         character: Character,
         campaign: Campaign,
         current_session: Session,
-        parent=None,
+        parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
         self._character = character
@@ -66,8 +65,8 @@ class CharacterKillSection(QWidget):
 
         # Separator
         line = QFrame()
-        line.setFrameShape(QFrame.HLine)
-        line.setFrameShadow(QFrame.Sunken)
+        line.setFrameShape(QFrame.Shape.HLine)
+        line.setFrameShadow(QFrame.Shadow.Sunken)
         self._layout.addWidget(line)
 
         # Readonly rows (previous sessions aggregated)
@@ -165,7 +164,7 @@ class KillPanel(QScrollArea):
 
     session_dirty = Signal()
 
-    def __init__(self, parent=None) -> None:
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.setWidgetResizable(True)
         self._container = QWidget()
@@ -179,7 +178,7 @@ class KillPanel(QScrollArea):
         self._campaign: Campaign | None = None
         self._session: Session | None = None
 
-    def load_session(self, campaign: Campaign, session: Session | None) -> None:
+    def load_session(self, campaign: Campaign | None, session: Session | None) -> None:
         self._campaign = campaign
         self._session = session
         self._rebuild()
@@ -199,16 +198,18 @@ class KillPanel(QScrollArea):
         self._clear()
         if self._campaign is None or self._session is None:
             return
+        campaign = self._campaign
+        session = self._session
 
         current_idx = next(
-            (i for i, s in enumerate(self._campaign.sessions) if s.id == self._session.id),
-            len(self._campaign.sessions) - 1,
+            (i for i, s in enumerate(campaign.sessions) if s.id == session.id),
+            len(campaign.sessions) - 1,
         )
 
-        for player in self._campaign.players:
+        for player in campaign.players:
             multi_char = len(player.characters) > 1
             if multi_char:
-                total = _player_total_kills(self._campaign, player, current_idx)
+                total = _player_total_kills(campaign, player, current_idx)
                 player_text = f"▸ {player.name} ({total})"
             else:
                 player_text = f"▸ {player.name}"
@@ -219,7 +220,7 @@ class KillPanel(QScrollArea):
 
             for character in player.characters:
                 section = CharacterKillSection(
-                    character, self._campaign, self._session
+                    character, campaign, session
                 )
                 section.session_dirty.connect(self.session_dirty)
                 self._insert(section)

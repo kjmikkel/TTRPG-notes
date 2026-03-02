@@ -8,11 +8,12 @@ from PySide6.QtWidgets import (
     QFormLayout,
     QLineEdit,
     QVBoxLayout,
+    QWidget,
 )
 
 
 class NewSessionDialog(QDialog):
-    def __init__(self, parent=None) -> None:
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.setWindowTitle("New Session")
         self.setMinimumWidth(300)
@@ -30,7 +31,7 @@ class NewSessionDialog(QDialog):
         self._date_edit.setDisplayFormat("yyyy-MM-dd")
         form.addRow("Date:", self._date_edit)
 
-        buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
         buttons.accepted.connect(self.accept)
         buttons.rejected.connect(self.reject)
         outer.addWidget(buttons)

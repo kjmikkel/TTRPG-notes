@@ -1,7 +1,14 @@
 from __future__ import annotations
 
 from PySide6.QtCore import Signal
-from PySide6.QtWidgets import QHBoxLayout, QLabel, QLineEdit, QPushButton, QSizePolicy, QWidget
+from PySide6.QtWidgets import (
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QPushButton,
+    QSizePolicy,
+    QWidget,
+)
 
 from ttrpg_notes.models.campaign import Kill
 
@@ -16,7 +23,7 @@ class KillEntry(QWidget):
     name_changed = Signal(object)     # Kill
     remove_requested = Signal(object) # Kill
 
-    def __init__(self, kill: Kill, parent=None) -> None:
+    def __init__(self, kill: Kill, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.kill = kill
 
@@ -24,7 +31,7 @@ class KillEntry(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
 
         self._name_edit = QLineEdit(kill.being)
-        self._name_edit.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        self._name_edit.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         self._name_edit.editingFinished.connect(self._on_name_changed)
 
         self._count_btn = QPushButton(str(kill.count))
@@ -67,13 +74,13 @@ class KillEntry(QWidget):
 class ReadonlyKillEntry(QWidget):
     """A single kill row for previous sessions (read-only label)."""
 
-    def __init__(self, being: str, count: int, parent=None) -> None:
+    def __init__(self, being: str, count: int, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
 
         name_label = QLabel(being)
-        name_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        name_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         name_label.setEnabled(False)
 
         count_label = QLabel(str(count))

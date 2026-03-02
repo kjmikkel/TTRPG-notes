@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QColor, QFont, QFontMetrics
+from PySide6.QtCore import Qt, QModelIndex, QPersistentModelIndex, QPoint, Signal
+from PySide6.QtGui import QColor, QFont, QFontMetrics, QPainter
 from PySide6.QtWidgets import (
     QApplication,
     QInputDialog,
@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (
     QStyle,
     QStyledItemDelegate,
     QStyleOptionViewItem,
+    QWidget,
 )
 
 from ttrpg_notes.models.campaign import Campaign, Session
@@ -23,14 +24,14 @@ _ROLE_DIRTY = 257
 class _DirtyDelegate(QStyledItemDelegate):
     """Draws a red superscript '*' after the label of dirty sessions."""
 
-    def paint(self, painter, option, index) -> None:
+    def paint(self, painter: QPainter, option: QStyleOptionViewItem, index: QModelIndex | QPersistentModelIndex) -> None:
         super().paint(painter, option, index)
         if not index.data(_ROLE_DIRTY):
             return
 
         painter.save()
 
-        text = index.data(Qt.DisplayRole) or ""
+        text = index.data(Qt.ItemDataRole.DisplayRole) or ""
         fm = QFontMetrics(option.font)
 
         # Resolve the precise rect that the default delegate used for text.
@@ -38,7 +39,7 @@ class _DirtyDelegate(QStyledItemDelegate):
         self.initStyleOption(style_opt, index)
         w = option.widget
         style = w.style() if w else QApplication.style()
-        text_rect = style.subElementRect(QStyle.SE_ItemViewItemText, style_opt, w)
+        text_rect = style.subElementRect(QStyle.SubElement.SE_ItemViewItemText, style_opt, w)
 
         # Superscript: ~65 % of normal size, red, drawn near the top of the row.
         sup_font = QFont(option.font)
@@ -81,11 +82,11 @@ class SessionList(QListWidget):
     session_renamed = Signal(object)   # Session
     session_deleted = Signal(object)   # Session
 
-    def __init__(self, parent=None) -> None:
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._campaign: Campaign | None = None
         self.currentItemChanged.connect(self._on_item_changed)
-        self.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.customContextMenuRequested.connect(self._show_context_menu)
         self.setItemDelegate(_DirtyDelegate(self))
 
@@ -125,7 +126,7 @@ class SessionList(QListWidget):
         item = self.currentItem()
         return item.data(_ROLE_SESSION_ID) if item else None
 
-    def _on_item_changed(self, current: QListWidgetItem | None, _prev) -> None:
+    def _on_item_changed(self, current: QListWidgetItem | None, _prev: QListWidgetItem | None) -> None:
         if self._campaign is None or current is None:
             self.session_selected.emit(None)
             return
@@ -153,7 +154,7 @@ class SessionList(QListWidget):
     # Context menu — rename / delete
     # ------------------------------------------------------------------
 
-    def _show_context_menu(self, pos) -> None:
+    def _show_context_menu(self, pos: QPoint) -> None:
         item = self.itemAt(pos)
         if item is None or self._campaign is None:
             return
@@ -187,14 +188,15 @@ class SessionList(QListWidget):
         self.session_renamed.emit(session)
 
     def _delete_session(self, session: Session) -> None:
+        assert self._campaign is not None
         label = _session_label(session, self._campaign.date_format)
         resp = QMessageBox.question(
             self,
             "Delete Session",
             f"Permanently delete '{label}'?\nThis cannot be undone.",
-            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
         )
-        if resp != QMessageBox.Yes:
+        if resp != QMessageBox.StandardButton.Yes:
             return
         self._campaign.sessions.remove(session)
         self.refresh()

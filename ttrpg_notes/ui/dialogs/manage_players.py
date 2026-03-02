@@ -13,12 +13,13 @@ from PySide6.QtWidgets import (
     QTreeWidget,
     QTreeWidgetItem,
     QVBoxLayout,
+    QWidget,
 )
 
 from ttrpg_notes.models.campaign import Campaign, Character, Player
 
 # UserRole tags stored on each tree item
-_ROLE = Qt.UserRole
+_ROLE = Qt.ItemDataRole.UserRole
 
 
 class ManagePlayersDialog(QDialog):
@@ -28,7 +29,7 @@ class ManagePlayersDialog(QDialog):
     After exec(), check .changed to know if a save is needed.
     """
 
-    def __init__(self, campaign: Campaign, parent=None) -> None:
+    def __init__(self, campaign: Campaign, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._campaign = campaign
         self.changed = False
@@ -40,7 +41,7 @@ class ManagePlayersDialog(QDialog):
 
         self._tree = QTreeWidget()
         self._tree.setHeaderHidden(True)
-        self._tree.setSelectionMode(QTreeWidget.SingleSelection)
+        self._tree.setSelectionMode(QTreeWidget.SelectionMode.SingleSelection)
         self._tree.currentItemChanged.connect(self._update_buttons)
         layout.addWidget(self._tree)
 
@@ -59,7 +60,7 @@ class ManagePlayersDialog(QDialog):
         self._rename_btn.clicked.connect(self._rename)
         self._delete_btn.clicked.connect(self._delete)
 
-        close_buttons = QDialogButtonBox(QDialogButtonBox.Close)
+        close_buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
         close_buttons.rejected.connect(self.accept)
         layout.addWidget(close_buttons)
 
@@ -92,18 +93,22 @@ class ManagePlayersDialog(QDialog):
         if selected_tag:
             self._select_by_tag(selected_tag)
 
-    def _selected_tag(self):
+    def _selected_tag(self) -> object:
         item = self._tree.currentItem()
         return item.data(0, _ROLE) if item else None
 
-    def _select_by_tag(self, tag) -> None:
+    def _select_by_tag(self, tag: object) -> None:
         for i in range(self._tree.topLevelItemCount()):
             top = self._tree.topLevelItem(i)
+            if top is None:
+                continue
             if top.data(0, _ROLE) == tag:
                 self._tree.setCurrentItem(top)
                 return
             for j in range(top.childCount()):
                 child = top.child(j)
+                if child is None:
+                    continue
                 if child.data(0, _ROLE) == tag:
                     self._tree.setCurrentItem(child)
                     return
@@ -187,9 +192,9 @@ class ManagePlayersDialog(QDialog):
                 "Delete Player",
                 f"Delete player '{player.name}' and all their characters?\n"
                 "Kill data recorded against their characters will be orphaned.",
-                QMessageBox.Yes | QMessageBox.No,
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             )
-            if resp != QMessageBox.Yes:
+            if resp != QMessageBox.StandardButton.Yes:
                 return
             self._campaign.players.remove(player)
         else:
@@ -202,9 +207,9 @@ class ManagePlayersDialog(QDialog):
                 "Delete Character",
                 f"Delete character '{char.name}'?\n"
                 "Kill data recorded for this character will be orphaned.",
-                QMessageBox.Yes | QMessageBox.No,
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             )
-            if resp != QMessageBox.Yes:
+            if resp != QMessageBox.StandardButton.Yes:
                 return
             player.characters.remove(char)  # type: ignore[union-attr]
 

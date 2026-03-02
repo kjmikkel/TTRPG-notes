@@ -7,6 +7,7 @@ from PySide6.QtWidgets import (
     QFormLayout,
     QLineEdit,
     QVBoxLayout,
+    QWidget,
 )
 
 
@@ -20,7 +21,7 @@ _DATE_FORMATS = [
 
 
 class NewCampaignDialog(QDialog):
-    def __init__(self, parent=None) -> None:
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.setWindowTitle("New Campaign")
         self.setMinimumWidth(350)
@@ -38,7 +39,7 @@ class NewCampaignDialog(QDialog):
             self._fmt_combo.addItem(f"{example}  ({fmt})", userData=fmt)
         form.addRow("Date format:", self._fmt_combo)
 
-        buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
         buttons.accepted.connect(self._accept)
         buttons.rejected.connect(self.reject)
         outer.addWidget(buttons)
@@ -53,4 +54,4 @@ class NewCampaignDialog(QDialog):
 
     @property
     def date_format(self) -> str:
-        return self._fmt_combo.currentData()
+        return str(self._fmt_combo.currentData())

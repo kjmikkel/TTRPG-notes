@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from PySide6.QtCore import QDate
 
-from ttrpg_notes.models.campaign import Campaign
+from ttrpg_notes.models.campaign import Campaign, Session
 
 
 # ---------------------------------------------------------------------------
@@ -14,7 +14,7 @@ def _format_date(date_str: str, date_format: str) -> str:
     return d.toString(date_format) if d.isValid() else date_str
 
 
-def _single_session_kills(session) -> dict[str, dict[str, int]]:
+def _single_session_kills(session: Session) -> dict[str, dict[str, int]]:
     """Return {char_id: {being: total_count}} for one session only."""
     result: dict[str, dict[str, int]] = {}
     for char_id, kills in session.kills.items():

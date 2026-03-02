@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QRadioButton,
     QVBoxLayout,
+    QWidget,
 )
 
 from ttrpg_notes.models.campaign import Campaign
@@ -28,7 +29,7 @@ class ExportDialog(QDialog):
     pre-session notes, post-session notes, total kill count.
     """
 
-    def __init__(self, campaign: Campaign, parent=None) -> None:
+    def __init__(self, campaign: Campaign, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._campaign = campaign
         self.setWindowTitle("Export Campaign")
@@ -62,8 +63,8 @@ class ExportDialog(QDialog):
         layout.addWidget(opt_group)
 
         # --- Buttons ---
-        buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
-        buttons.button(QDialogButtonBox.Ok).setText("Export…")
+        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
+        buttons.button(QDialogButtonBox.StandardButton.Ok).setText("Export…")
         buttons.accepted.connect(self._on_export)
         buttons.rejected.connect(self.reject)
         layout.addWidget(buttons)

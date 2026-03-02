@@ -15,6 +15,7 @@ from PySide6.QtWidgets import (
     QProgressDialog,
     QPushButton,
     QVBoxLayout,
+    QWidget,
 )
 
 _log = logging.getLogger(__name__)
@@ -114,7 +115,7 @@ class _DownloadWorker(QThread):
 
     def run(self) -> None:
         try:
-            import requests  # type: ignore[import]
+            import requests
 
             self._dest_dir.mkdir(parents=True, exist_ok=True)
             stem = self._base_url.rsplit("/", 1)[-1]
@@ -145,7 +146,7 @@ class DownloaderDialog(QDialog):
     downloaded = Signal(Path)
     deleted = Signal(str)
 
-    def __init__(self, dest_dir: Path, parent=None) -> None:
+    def __init__(self, dest_dir: Path, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._dest_dir = dest_dir
         self.setWindowTitle("Manage Dictionaries")
@@ -250,8 +251,8 @@ class DownloaderDialog(QDialog):
             return
         base_url = item.data(_ROLE_URL)
 
-        self._progress = QProgressDialog("Downloading…", None, 0, 0, self)
-        self._progress.setWindowModality(Qt.WindowModal)
+        self._progress = QProgressDialog("Downloading…", "", 0, 0, self)
+        self._progress.setWindowModality(Qt.WindowModality.WindowModal)
         self._progress.setWindowTitle("Downloading Dictionary")
         self._progress.show()
 
@@ -271,9 +272,9 @@ class DownloaderDialog(QDialog):
             self,
             "Delete Dictionary",
             f"Delete the '{name}' dictionary files from disk?",
-            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
         )
-        if resp != QMessageBox.Yes:
+        if resp != QMessageBox.StandardButton.Yes:
             return
 
         for ext in (".dic", ".aff"):

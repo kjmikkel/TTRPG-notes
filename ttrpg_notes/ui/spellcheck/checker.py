@@ -15,7 +15,7 @@ class SpellChecker:
     """
 
     def __init__(self, dic_path: Path) -> None:
-        from spylls.hunspell import Dictionary  # type: ignore[import]
+        from spylls.hunspell import Dictionary  # type: ignore[import-untyped]
 
         # spylls expects the path without extension
         stem = dic_path.with_suffix("")
@@ -33,7 +33,7 @@ class SpellChecker:
         """Return True if word is correctly spelled (or in user dict / ignore)."""
         if word in self._user_words or word in self._ignore_list:
             return True
-        return self._dictionary.lookup(word)
+        return bool(self._dictionary.lookup(word))
 
     def suggest(self, word: str) -> list[str]:
         return list(self._dictionary.suggest(word))

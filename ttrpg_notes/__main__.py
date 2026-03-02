@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import logging.handlers
 import sys
+import types
 from pathlib import Path
 
 from PySide6.QtCore import Qt
@@ -46,7 +47,11 @@ def _configure_logging() -> None:
 def _install_excepthook() -> None:
     _log = logging.getLogger(__name__)
 
-    def _hook(exc_type, exc_value, exc_tb):
+    def _hook(
+        exc_type: type[BaseException],
+        exc_value: BaseException,
+        exc_tb: types.TracebackType | None,
+    ) -> None:
         if not issubclass(exc_type, (KeyboardInterrupt, SystemExit)):
             _log.critical("Unhandled exception", exc_info=(exc_type, exc_value, exc_tb))
         sys.__excepthook__(exc_type, exc_value, exc_tb)
@@ -69,13 +74,13 @@ def _make_splash() -> QSplashScreen:
     title_font.setBold(True)
     painter.setFont(title_font)
     painter.setPen(QColor("#cdd6f4"))
-    painter.drawText(pix.rect().adjusted(0, -30, 0, 0), Qt.AlignCenter, "TTRPG Notes")
+    painter.drawText(pix.rect().adjusted(0, -30, 0, 0), Qt.AlignmentFlag.AlignCenter, "TTRPG Notes")
 
     sub_font = QFont()
     sub_font.setPointSize(10)
     painter.setFont(sub_font)
     painter.setPen(QColor("#6c7086"))
-    painter.drawText(pix.rect().adjusted(0, 60, 0, 0), Qt.AlignCenter, "Loading…")
+    painter.drawText(pix.rect().adjusted(0, 60, 0, 0), Qt.AlignmentFlag.AlignCenter, "Loading…")
 
     painter.end()
     return QSplashScreen(pix)

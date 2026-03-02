@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Any
 
 from ttrpg_notes.models.campaign import Campaign, Character, Kill, Player, Session
 
@@ -47,7 +48,7 @@ def save_dirty_sessions(campaign: Campaign, path: str | Path) -> None:
 
 # ---------- serialisation helpers ----------
 
-def _campaign_to_dict(c: Campaign) -> dict:
+def _campaign_to_dict(c: Campaign) -> dict[str, Any]:
     return {
         "version": _SCHEMA_VERSION,
         "id": c.id,
@@ -58,7 +59,7 @@ def _campaign_to_dict(c: Campaign) -> dict:
     }
 
 
-def _player_to_dict(p: Player) -> dict:
+def _player_to_dict(p: Player) -> dict[str, Any]:
     return {
         "id": p.id,
         "name": p.name,
@@ -66,7 +67,7 @@ def _player_to_dict(p: Player) -> dict:
     }
 
 
-def _session_to_dict(s: Session) -> dict:
+def _session_to_dict(s: Session) -> dict[str, Any]:
     return {
         "id": s.id,
         "number": s.number,
@@ -84,7 +85,7 @@ def _session_to_dict(s: Session) -> dict:
 
 # ---------- deserialisation helpers ----------
 
-def _campaign_from_dict(d: dict) -> Campaign:
+def _campaign_from_dict(d: dict[str, Any]) -> Campaign:
     return Campaign(
         id=d["id"],
         name=d["name"],
@@ -94,7 +95,7 @@ def _campaign_from_dict(d: dict) -> Campaign:
     )
 
 
-def _player_from_dict(d: dict) -> Player:
+def _player_from_dict(d: dict[str, Any]) -> Player:
     return Player(
         id=d["id"],
         name=d["name"],
@@ -102,7 +103,7 @@ def _player_from_dict(d: dict) -> Player:
     )
 
 
-def _session_from_dict(d: dict) -> Session:
+def _session_from_dict(d: dict[str, Any]) -> Session:
     kills: dict[str, list[Kill]] = {}
     for char_id, kill_list in d.get("kills", {}).items():
         kills[char_id] = [Kill(being=k["being"], count=k["count"]) for k in kill_list]
