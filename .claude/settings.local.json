@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python:*)",
+      "Bash(ruff check:*)",
+      "Bash(mypy .:*)",
+      "Bash(mypy:*)",
+      "Skill(code-review:code-review)"
+    ]
+  }
+}

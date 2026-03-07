@@ -38,11 +38,18 @@ def save_dirty_sessions(campaign: Campaign, path: str | Path) -> None:
     session_map = {s["id"]: s for s in data.get("sessions", [])}
 
     for session in campaign.sessions:
-        if session.dirty:
+        if session.dirty or session.id not in session_map:
+            # Write dirty sessions and any clean sessions missing from the file
+            # (e.g. created during a session that was never fully saved).
             session_map[session.id] = _session_to_dict(session)
             session.dirty = False
 
-    data["sessions"] = list(session_map.values())
+    # Write in campaign order; preserve any file-only sessions at the end.
+    in_memory_ids = {s.id for s in campaign.sessions}
+    data["sessions"] = (
+        [session_map[s.id] for s in campaign.sessions]
+        + [v for k, v in session_map.items() if k not in in_memory_ids]
+    )
     p.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
 
 

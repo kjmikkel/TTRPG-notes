@@ -24,6 +24,7 @@ from PySide6.QtWidgets import (
 )
 
 from ttrpg_notes.models.campaign import Campaign
+from ttrpg_notes.ui.collapsible import CollapsibleSection
 
 _DATE_PRESETS: list[tuple[str, str]] = [
     ("yyyy-MM-dd", "2024-01-15"),
@@ -33,39 +34,7 @@ _DATE_PRESETS: list[tuple[str, str]] = [
     ("d MMMM yyyy", "15 January 2024"),
 ]
 
-
-class _Fold(QWidget):
-    """Collapsible section with a toggle button header."""
-
-    def __init__(self, title: str, parent: QWidget | None = None) -> None:
-        super().__init__(parent)
-        self._title = title
-
-        vbox = QVBoxLayout(self)
-        vbox.setContentsMargins(0, 0, 0, 0)
-        vbox.setSpacing(0)
-
-        self._toggle = QPushButton(f"▶ {title}")
-        self._toggle.setFlat(True)
-        self._toggle.setCheckable(True)
-        self._toggle.setStyleSheet(
-            "QPushButton { text-align: left; font-weight: bold; padding: 4px 2px; }"
-        )
-        self._toggle.toggled.connect(self._on_toggled)
-        vbox.addWidget(self._toggle)
-
-        self._body = QWidget()
-        self._body.hide()
-        self._body_layout = QVBoxLayout(self._body)
-        self._body_layout.setContentsMargins(16, 4, 0, 8)
-        vbox.addWidget(self._body)
-
-    def body_layout(self) -> QVBoxLayout:
-        return self._body_layout
-
-    def _on_toggled(self, checked: bool) -> None:
-        self._body.setVisible(checked)
-        self._toggle.setText(f"{'▼' if checked else '▶'} {self._title}")
+_FOLD_TOGGLE_STYLE = "QPushButton { text-align: left; font-weight: bold; padding: 4px 2px; }"
 
 
 class OptionsDialog(QDialog):
@@ -242,10 +211,11 @@ class OptionsDialog(QDialog):
         remove_fn: Callable[[str], None],
         update_fn: Callable[[str, str], None],
     ) -> None:
-        fold = _Fold(title)
-        fold.body_layout().addWidget(
-            self._make_word_editor(get_fn, add_fn, remove_fn, update_fn)
-        )
+        body = QWidget()
+        body_layout = QVBoxLayout(body)
+        body_layout.setContentsMargins(16, 4, 0, 8)
+        body_layout.addWidget(self._make_word_editor(get_fn, add_fn, remove_fn, update_fn))
+        fold = CollapsibleSection(title, body, expanded=False, toggle_style=_FOLD_TOGGLE_STYLE)
         self._vbox.addWidget(fold)
 
     def _make_word_editor(

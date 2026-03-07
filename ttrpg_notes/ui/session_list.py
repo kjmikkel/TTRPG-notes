@@ -118,7 +118,7 @@ class SessionList(QListWidget):
 
     def _select_by_id(self, session_id: str) -> None:
         for i in range(self.count()):
-            if self.item(i).data(256) == session_id:
+            if self.item(i).data(_ROLE_SESSION_ID) == session_id:
                 self.setCurrentRow(i)
                 return
 
@@ -130,7 +130,7 @@ class SessionList(QListWidget):
         if self._campaign is None or current is None:
             self.session_selected.emit(None)
             return
-        sid = current.data(256)
+        sid = current.data(_ROLE_SESSION_ID)
         for session in self._campaign.sessions:
             if session.id == sid:
                 self.session_selected.emit(session)

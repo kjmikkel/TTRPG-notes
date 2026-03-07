@@ -29,6 +29,6 @@ def run_startup(window: MainWindow) -> None:
 
     clicked = msg.clickedButton()
     if clicked is new_btn:
-        window._action_new_campaign()
+        window.open_new_campaign_dialog()
     elif clicked is open_btn:
-        window._action_open()
+        window.open_campaign_file()

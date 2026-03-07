@@ -92,7 +92,7 @@ class DropboxSetupDialog(QDialog):
         help_label = QLabel(
             "Register an app at "
             '<a href="https://www.dropbox.com/developers/apps">dropbox.com/developers/apps</a>,'
-            " set the redirect URI to <b>http://localhost</b>, then paste your App Key below."
+            " set the redirect URI to <b>http://127.0.0.1</b>, then paste your App Key below."
         )
         help_label.setWordWrap(True)
         help_label.setOpenExternalLinks(True)
@@ -212,7 +212,17 @@ class DropboxSetupDialog(QDialog):
     # Close
     # ------------------------------------------------------------------
 
+    def _disconnect_worker(self) -> None:
+        if self._worker is not None:
+            try:
+                self._worker.auth_success.disconnect()
+                self._worker.auth_failed.disconnect()
+            except RuntimeError:
+                pass
+            self._worker = None
+
     def _on_close(self) -> None:
+        self._disconnect_worker()
         # Persist folder (user may have edited it without re-connecting).
         settings.set_dropbox_upload_folder(
             self._folder_edit.text().strip() or "/TTRPG Notes"

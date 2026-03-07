@@ -24,7 +24,7 @@ Public API
 Dropbox App setup
 -----------------
 Register an app at https://www.dropbox.com/developers/apps and add
-``http://localhost`` as a redirect URI.  Copy the App Key (not the
+``http://127.0.0.1`` as a redirect URI.  Copy the App Key (not the
 App Secret — PKCE does not need a secret) into the settings dialog.
 """
 from __future__ import annotations
@@ -204,7 +204,7 @@ def run_auth_flow(
     # Bind to port 0 so the OS assigns a free port automatically.
     server = _CallbackServer(("127.0.0.1", 0), _CallbackHandler)
     port = server.server_address[1]
-    redirect_uri = f"http://localhost:{port}"
+    redirect_uri = f"http://127.0.0.1:{port}"
 
     auth_url = _build_auth_url(app_key, challenge, redirect_uri)
     open_browser_fn(auth_url)

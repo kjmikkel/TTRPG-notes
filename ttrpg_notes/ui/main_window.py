@@ -324,7 +324,9 @@ class MainWindow(QMainWindow):
             lambda: self._ignore_word(word)
         )
         menu.addSeparator()
-        menu.addActions(self._summary_editor.createStandardContextMenu().actions())
+        std_menu = self._summary_editor.createStandardContextMenu()
+        std_menu.setParent(menu)
+        menu.addActions(std_menu.actions())
 
         def _apply(suggestions: list[str]) -> None:
             menu.removeAction(placeholder)
@@ -411,6 +413,13 @@ class MainWindow(QMainWindow):
     # ------------------------------------------------------------------
     # Menu actions
     # ------------------------------------------------------------------
+
+    # Public entry points (used by app.py startup to avoid crossing into private API)
+    def open_new_campaign_dialog(self) -> None:
+        self._action_new_campaign()
+
+    def open_campaign_file(self) -> None:
+        self._action_open()
 
     def _action_new_campaign(self) -> None:
         if not self._confirm_discard():
@@ -690,10 +699,12 @@ class MainWindow(QMainWindow):
     def closeEvent(self, event: QCloseEvent) -> None:
         settings.set_splitter_sizes(self._splitter.sizes())
         if self._campaign is None:
+            self._disconnect_upload_workers()
             event.accept()
             return
         dirty = [s for s in self._campaign.sessions if s.dirty]
         if not dirty:
+            self._disconnect_upload_workers()
             event.accept()
             return
         resp = QMessageBox.question(
@@ -703,9 +714,37 @@ class MainWindow(QMainWindow):
             QMessageBox.StandardButton.Save | QMessageBox.StandardButton.Discard | QMessageBox.StandardButton.Cancel,
         )
         if resp == QMessageBox.StandardButton.Save:
-            self._action_save()
+            if self._campaign_path is None:
+                event.ignore()
+                return
+            try:
+                save_dirty_sessions(self._campaign, self._campaign_path)
+                self._update_title_dirty()
+            except Exception as exc:
+                _log.exception("Failed to save on close")
+                QMessageBox.critical(self, "Save Error", str(exc))
+                event.ignore()
+                return
+            self._disconnect_upload_workers()
             event.accept()
         elif resp == QMessageBox.StandardButton.Discard:
+            self._disconnect_upload_workers()
             event.accept()
         else:
             event.ignore()
+
+    def _disconnect_upload_workers(self) -> None:
+        """Detach UI-touching signals from all background workers before the window closes."""
+        for worker in self._upload_workers:
+            try:
+                worker.upload_success.disconnect()
+                worker.upload_failed.disconnect()
+                worker.finished.disconnect()
+            except RuntimeError:
+                pass
+        for worker in self._suggest_workers:
+            try:
+                worker.suggestions_ready.disconnect()
+                worker.finished.disconnect()
+            except RuntimeError:
+                pass

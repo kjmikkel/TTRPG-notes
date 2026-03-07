@@ -19,15 +19,6 @@ def set_last_campaign_path(path: str) -> None:
     _qs().setValue("last_campaign_path", path)
 
 
-def get_dict_dir() -> str | None:
-    val = _qs().value("dict_dir", None)
-    return str(val) if val else None
-
-
-def set_dict_dir(path: str) -> None:
-    _qs().setValue("dict_dir", path)
-
-
 def get_splitter_sizes() -> list[int] | None:
     val = _qs().value("splitter_sizes")
     if val is None:

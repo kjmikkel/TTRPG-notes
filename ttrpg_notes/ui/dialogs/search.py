@@ -13,6 +13,8 @@ from PySide6.QtWidgets import (
 
 from ttrpg_notes.models.campaign import Campaign
 
+_ROLE_SESSION_ID = 256
+
 
 class SearchDialog(QDialog):
     """Non-modal search dialog; emits session_selected when user clicks a result."""
@@ -28,7 +30,7 @@ class SearchDialog(QDialog):
         self.setMinimumHeight(300)
 
         layout = QVBoxLayout(self)
-        layout.addWidget(QLabel("Search sessions (name or summary):"))
+        layout.addWidget(QLabel("Search sessions (name, summary, or notes):"))
 
         self._search_edit = QLineEdit()
         self._search_edit.setPlaceholderText("Type to filter…")
@@ -46,14 +48,15 @@ class SearchDialog(QDialog):
         q = query.lower()
         for session in self._campaign.sessions:
             name = session.name or ""
-            if q in name.lower() or q in session.summary.lower():
+            if (q in name.lower() or q in session.summary.lower()
+                    or q in session.pre_notes.lower() or q in session.post_notes.lower()):
                 label = session.name or session.date or f"Session {session.number}"
                 item = QListWidgetItem(label)
-                item.setData(256, session.id)
+                item.setData(_ROLE_SESSION_ID, session.id)
                 self._results.addItem(item)
 
     def _on_item_double_clicked(self, item: QListWidgetItem) -> None:
-        sid = item.data(256)
+        sid = item.data(_ROLE_SESSION_ID)
         for session in self._campaign.sessions:
             if session.id == sid:
                 self.session_selected.emit(session)

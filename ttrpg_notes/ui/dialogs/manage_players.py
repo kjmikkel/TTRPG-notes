@@ -130,7 +130,13 @@ class ManagePlayersDialog(QDialog):
         name = name.strip()
         if not ok or not name:
             return
-        self._campaign.players.append(Player(id=str(uuid.uuid4()), name=name))
+        char_name, ok = QInputDialog.getText(self, "Add Player", "Initial character name:")
+        char_name = char_name.strip()
+        if not ok or not char_name:
+            return
+        player = Player(id=str(uuid.uuid4()), name=name)
+        player.characters.append(Character(id=str(uuid.uuid4()), name=char_name))
+        self._campaign.players.append(player)
         self.changed = True
         self._populate()
 

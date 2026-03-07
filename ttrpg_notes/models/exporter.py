@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from PySide6.QtCore import QDate
+from datetime import datetime
 
 from ttrpg_notes.models.campaign import Campaign, Session
 
@@ -9,9 +9,59 @@ from ttrpg_notes.models.campaign import Campaign, Session
 # Helpers
 # ---------------------------------------------------------------------------
 
+def _qt_date_format(qt_fmt: str, dt: datetime) -> str:
+    """
+    Render *dt* using a Qt date format string (e.g. ``"MMMM d, yyyy"``).
+
+    Tokens are processed longest-first so that e.g. ``"MMMM"`` is matched
+    before ``"MM"`` or ``"M"``.  Single ``d`` and ``M`` emit the value
+    without zero-padding, matching Qt's behaviour.
+    """
+    result: list[str] = []
+    i = 0
+    while i < len(qt_fmt):
+        if qt_fmt[i] == "'":
+            # Quoted literal: scan to closing quote and emit verbatim.
+            # Qt's spec: '' (empty) → a literal single-quote character.
+            j = i + 1
+            while j < len(qt_fmt) and qt_fmt[j] != "'":
+                j += 1
+            if j == i + 1:
+                result.append("'")   # '' → literal apostrophe
+            else:
+                result.append(qt_fmt[i + 1 : j])
+            i = j + 1
+        elif qt_fmt[i : i + 4] == "yyyy":
+            result.append(dt.strftime("%Y")); i += 4
+        elif qt_fmt[i : i + 2] == "yy":
+            result.append(dt.strftime("%y")); i += 2
+        elif qt_fmt[i : i + 4] == "MMMM":
+            result.append(dt.strftime("%B")); i += 4
+        elif qt_fmt[i : i + 3] == "MMM":
+            result.append(dt.strftime("%b")); i += 3
+        elif qt_fmt[i : i + 2] == "MM":
+            result.append(dt.strftime("%m")); i += 2
+        elif qt_fmt[i] == "M":
+            result.append(str(dt.month)); i += 1
+        elif qt_fmt[i : i + 4] == "dddd":
+            result.append(dt.strftime("%A")); i += 4
+        elif qt_fmt[i : i + 3] == "ddd":
+            result.append(dt.strftime("%a")); i += 3
+        elif qt_fmt[i : i + 2] == "dd":
+            result.append(dt.strftime("%d")); i += 2
+        elif qt_fmt[i] == "d":
+            result.append(str(dt.day)); i += 1
+        else:
+            result.append(qt_fmt[i]); i += 1
+    return "".join(result)
+
+
 def _format_date(date_str: str, date_format: str) -> str:
-    d = QDate.fromString(date_str, "yyyy-MM-dd")
-    return d.toString(date_format) if d.isValid() else date_str
+    try:
+        dt = datetime.strptime(date_str, "%Y-%m-%d")
+    except ValueError:
+        return date_str
+    return _qt_date_format(date_format, dt)
 
 
 def _single_session_kills(session: Session) -> dict[str, dict[str, int]]:

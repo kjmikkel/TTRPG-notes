@@ -14,26 +14,36 @@ Core application implemented. Tech stack: PySide6 (GUI), spylls (spellcheck), re
 
 ```
 ttrpg_notes/
-├── __main__.py              # Entry point
-├── models/campaign.py       # Dataclasses: Campaign, Player, Character, Session, Kill
-├── models/persistence.py    # load_campaign(), save_campaign(), save_dirty_sessions()
-├── config/settings.py       # QSettings wrapper (last_campaign_path, dict_dir)
-├── ui/
-│   ├── app.py               # run_startup(): load last file or show open dialog
-│   ├── main_window.py       # QMainWindow with 3-panel layout + menu
-│   ├── session_list.py      # SessionList(QListWidget)
-│   ├── summary_editor.py    # SummaryEditor(QTextEdit) with spellcheck hook
-│   ├── kill_entry.py        # KillEntry (editable), ReadonlyKillEntry
-│   ├── kill_panel.py        # KillPanel(QScrollArea), CharacterKillSection
-│   └── spellcheck/
-│       ├── checker.py       # SpellChecker wrapping spylls
-│       ├── highlighter.py   # SpellHighlighter(QSyntaxHighlighter)
-│       └── downloader.py    # DownloaderDialog — fetch .dic/.aff from LibreOffice
-│   └── dialogs/
-│       ├── new_campaign.py  # NewCampaignDialog
-│       ├── new_player.py    # NewPlayerDialog
-│       ├── new_session.py   # NewSessionDialog
-│       └── search.py        # SearchDialog (non-modal)
+├── __main__.py                    # Entry point
+├── models/
+│   ├── campaign.py                # Dataclasses: Campaign, Player, Character, Session, Kill
+│   ├── persistence.py             # load_campaign(), save_campaign(), save_dirty_sessions()
+│   ├── exporter.py                # export_text(), export_markdown() — pure Python, no Qt
+│   └── kill_export.py             # build_kill_report(), export_kills_json()
+├── config/settings.py             # QSettings wrapper (last_campaign_path, dict_dir, dropbox)
+├── integrations/
+│   └── dropbox_client.py          # OAuth2 PKCE flow + file upload (no UI deps)
+└── ui/
+    ├── app.py                     # run_startup(): load last file or show open dialog
+    ├── collapsible.py             # Shared CollapsibleSection widget
+    ├── main_window.py             # QMainWindow with 3-panel layout + menu
+    ├── session_list.py            # SessionList(QListWidget)
+    ├── summary_editor.py          # SummaryEditor with collapsible pre/notes/post panels
+    ├── kill_entry.py              # KillEntry (editable), ReadonlyKillEntry
+    ├── kill_panel.py              # KillPanel(QScrollArea), CharacterKillSection
+    ├── spellcheck/
+    │   ├── checker.py             # SpellChecker wrapping spylls
+    │   ├── highlighter.py         # SpellHighlighter(QSyntaxHighlighter)
+    │   └── downloader.py          # DownloaderDialog — fetch .dic/.aff from LibreOffice
+    └── dialogs/
+        ├── new_campaign.py        # NewCampaignDialog
+        ├── new_player.py          # NewPlayerDialog
+        ├── new_session.py         # NewSessionDialog
+        ├── search.py              # SearchDialog (non-modal)
+        ├── export.py              # ExportDialog (text / Markdown)
+        ├── options.py             # OptionsDialog (date format, dictionary, word lists)
+        ├── manage_players.py      # ManagePlayersDialog
+        └── dropbox_setup.py       # DropboxSetupDialog + OAuth flow
 ```
 
 ## Conventions

@@ -251,15 +251,27 @@ class DownloaderDialog(QDialog):
             return
         base_url = item.data(_ROLE_URL)
 
-        self._progress = QProgressDialog("Downloading…", "", 0, 0, self)
+        self._progress = QProgressDialog("Downloading…", "Cancel", 0, 0, self)
         self._progress.setWindowModality(Qt.WindowModality.WindowModal)
         self._progress.setWindowTitle("Downloading Dictionary")
+        self._progress.canceled.connect(self._cancel_download)
         self._progress.show()
 
         self._worker = _DownloadWorker(base_url, self._dest_dir)
         self._worker.progress.connect(self._progress.setLabelText)
         self._worker.finished.connect(self._on_finished)
         self._worker.start()
+
+    def _cancel_download(self) -> None:
+        """Disconnect the running worker so its result is silently ignored."""
+        if self._worker is not None:
+            try:
+                self._worker.finished.disconnect()
+                self._worker.progress.disconnect()
+            except RuntimeError:
+                pass
+            self._worker = None
+        self._progress.close()
 
     def _delete_selected(self) -> None:
         item = self._list.currentItem()
